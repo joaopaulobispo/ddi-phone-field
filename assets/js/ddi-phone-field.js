@@ -250,7 +250,6 @@
 
             // Only validate on blur, not during typing
             field.addEventListener('blur', function() {
-                console.log('BLUR event triggered for:', field.name || field.id);
                 // Clear any pending validation timeout
                 if (self.validationTimeout) {
                     clearTimeout(self.validationTimeout);
@@ -261,7 +260,6 @@
 
             // Clear validation on input to avoid showing errors during typing
             field.addEventListener('input', function() {
-                console.log('INPUT event triggered for:', field.name || field.id);
                 // Clear any pending validation timeout
                 if (self.validationTimeout) {
                     clearTimeout(self.validationTimeout);
@@ -274,7 +272,6 @@
             const form = field.closest('form');
             if (form) {
                 form.addEventListener('submit', function(e) {
-                    console.log('SUBMIT event triggered for form with field:', field.name || field.id);
                     // Clear any pending validation timeout
                     if (self.validationTimeout) {
                         clearTimeout(self.validationTimeout);
