@@ -4,7 +4,7 @@ Tags: phone, ddi, international, elementor, contact-form-7, woocommerce
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,15 @@ Sim, o plugin inclui validação automática de números de telefone internacion
 
 == Changelog ==
 
+= 1.1.0 =
+* Corrigido: Campo telefone no Elementor Pro - Máscara desativada e validação corrigida
+* Melhorada: Compatibilidade com Elementor Pro - Resolvidos conflitos de validação
+* Adicionado: Validação em tempo real - Caracteres inválidos são removidos automaticamente
+* Adicionado: Arquivo de integração específico para Elementor Pro
+* Removido: Dependência do jquery.mask para evitar conflitos
+* Melhorado: CSS específico para formulários do Elementor Pro
+* Corrigido: Campo não aceita mais letras, apenas números e caracteres de telefone válidos
+
 = 1.0.0 =
 * Versão inicial do plugin
 * Integração com Elementor, Contact Form 7 e WooCommerce
@@ -71,6 +80,9 @@ Sim, o plugin inclui validação automática de números de telefone internacion
 * Estrutura organizacional melhorada
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Esta versão corrige problemas de compatibilidade com o Elementor Pro e melhora a validação do campo telefone.
 
 = 1.0.0 =
 Versão inicial do plugin.
