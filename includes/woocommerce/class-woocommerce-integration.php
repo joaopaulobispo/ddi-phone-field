@@ -3,7 +3,7 @@
  * WooCommerce Integration Class
  *
  * @package DDI_Phone_Field
- * @since 1.0.0
+ * @since 1.0.1
  */
 
 // Prevent direct access
