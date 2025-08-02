@@ -114,6 +114,52 @@
     margin-left: 2px;
 }
 
+/* Elementor Pro form compatibility */
+.elementor-form .ddi-phone-field-wrapper {
+    margin-bottom: 0;
+}
+
+.elementor-form .iti {
+    margin-bottom: 0;
+}
+
+.elementor-form .iti__tel-input {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 16px;
+    line-height: 1.5;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.elementor-form .iti__tel-input:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Prevent Elementor Pro validation conflicts */
+.elementor-form .iti__tel-input:invalid {
+    border-color: inherit;
+    box-shadow: none;
+}
+
+.elementor-form .iti__tel-input:valid {
+    border-color: inherit;
+    box-shadow: none;
+}
+
+/* Override Elementor Pro validation styles */
+.elementor-form .elementor-field-type-tel .elementor-field-textual:invalid {
+    border-color: inherit;
+    box-shadow: none;
+}
+
+.elementor-form .elementor-field-type-tel .elementor-field-textual:valid {
+    border-color: inherit;
+    box-shadow: none;
+}
+
 /* Error states */
 .iti.iti--error .iti__tel-input {
     border-color: #dc3545;

@@ -55,20 +55,23 @@ class DDI_Phone_Field_Loader {
         );
 
         wp_enqueue_script(
-            'jquery-mask-js',
-            'https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js',
-            array('jquery'),
-            '1.14.16',
-            true
-        );
-
-        wp_enqueue_script(
             'ddi-phone-field-js',
             DDI_PHONE_FIELD_PLUGIN_URL . 'assets/js/ddi-phone-field.js',
-            array('jquery', 'intl-tel-input-js', 'jquery-mask-js'),
+            array('jquery', 'intl-tel-input-js'),
             DDI_PHONE_FIELD_VERSION,
             true
         );
+
+        // Enqueue Elementor integration script if Elementor is active
+        if (did_action('elementor/loaded')) {
+            wp_enqueue_script(
+                'ddi-phone-field-elementor-integration',
+                DDI_PHONE_FIELD_PLUGIN_URL . 'assets/js/elementor-integration.js',
+                array('jquery', 'ddi-phone-field-js'),
+                DDI_PHONE_FIELD_VERSION,
+                true
+            );
+        }
 
         // Add dynamic CSS
         $this->add_dynamic_css();
