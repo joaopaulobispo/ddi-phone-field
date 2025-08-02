@@ -49,13 +49,12 @@
             }
 
             try {
-                // Remove any existing mask
-                if (typeof $.fn.mask !== 'undefined') {
-                    $(field).unmask();
-                }
-
                 // Check if field is in popup
                 const isPopup = this.isInPopup(field);
+
+                // Remove problematic attributes that conflict with Elementor Pro
+                field.removeAttribute('pattern');
+                field.removeAttribute('title');
 
                 const phoneNumber = window.intlTelInput(field, {
                     initialCountry: "br",
@@ -76,11 +75,6 @@
 
                 // Store the phone field
                 this.phoneFields.set(field, phoneNumber);
-
-                // Apply mask only for non-popup fields
-                if (!isPopup) {
-                    this.applyMask(field);
-                }
 
                 // Add validation with a small delay to avoid conflicts
                 setTimeout(() => {
@@ -113,6 +107,7 @@
             
             // Remove problematic pattern attribute for popups
             field.removeAttribute('pattern');
+            field.removeAttribute('title');
             
             // Ensure proper z-index
             const itiContainer = field.closest('.iti');
@@ -179,6 +174,7 @@
                 phoneFields.forEach(field => {
                     // Remove problematic pattern attribute
                     field.removeAttribute('pattern');
+                    field.removeAttribute('title');
                     
                     // Force reinitialize popup fields
                     this.forceReinitPopupField(field);
@@ -201,44 +197,11 @@
 
             // Remove existing classes and masks
             field.classList.remove('iti__tel-input', 'ddi-popup-field');
-            if (typeof $.fn.mask !== 'undefined') {
-                $(field).unmask();
-            }
-
+            
             // Reinitialize
             setTimeout(() => {
                 this.initSinglePhoneField(field);
             }, 100);
-        }
-
-        /**
-         * Apply mask to phone field
-         */
-        applyMask(field) {
-            if (typeof $.fn.mask !== 'undefined') {
-                // Remove existing mask first
-                $(field).unmask();
-                
-                // Apply Brazilian phone mask with more flexible options
-                $(field).mask('(00) 0000-00009', {
-                    onKeyPress: function(val, e, field, options) {
-                        field.mask(val.length > 14 ? '(00) 00000-0000' : '(00) 0000-00009', options);
-                    },
-                    onComplete: function(val) {
-                        // Don't trigger validation on mask completion
-                        // Only clear any existing validation
-                        if (window.ddiPhoneField) {
-                            window.ddiPhoneField.clearValidation(field);
-                        }
-                    },
-                    onInvalid: function(val, e, field, options) {
-                        // Don't show validation errors during typing
-                        if (window.ddiPhoneField) {
-                            window.ddiPhoneField.clearValidation(field);
-                        }
-                    }
-                });
-            }
         }
 
         /**
@@ -247,37 +210,41 @@
         addValidation(field, phoneNumber) {
             const self = this;
             const isPopup = this.isInPopup(field);
+            let isTyping = false;
+
+            // Add input validation to prevent invalid characters
+            field.addEventListener('input', function(e) {
+                const value = this.value;
+                const phonePattern = /^[\+]?[0-9\(\)\-\s\.]*$/;
+                
+                // If the new value doesn't match the pattern, revert to the last valid value
+                if (!phonePattern.test(value)) {
+                    this.value = value.replace(/[^0-9\(\)\-\s\.\+]/g, '');
+                }
+                
+                isTyping = true;
+                self.clearValidation(field);
+                
+                // Reset typing flag after a delay
+                setTimeout(() => {
+                    isTyping = false;
+                }, 200);
+            });
 
             // Only validate on blur, not during typing
             field.addEventListener('blur', function() {
-                // Clear any pending validation timeout
-                if (self.validationTimeout) {
-                    clearTimeout(self.validationTimeout);
-                    self.validationTimeout = null;
-                }
-                self.validateField(field, phoneNumber);
-            });
-
-            // Clear validation on input to avoid showing errors during typing
-            field.addEventListener('input', function() {
-                // Clear any pending validation timeout
-                if (self.validationTimeout) {
-                    clearTimeout(self.validationTimeout);
-                    self.validationTimeout = null;
-                }
-                self.clearValidation(field);
-            });
-
-            // Form submission validation
-            const form = field.closest('form');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    // Clear any pending validation timeout
-                    if (self.validationTimeout) {
-                        clearTimeout(self.validationTimeout);
-                        self.validationTimeout = null;
+                // Add a small delay to avoid validation during typing
+                setTimeout(() => {
+                    if (!isTyping) {
+                        self.validateField(field, phoneNumber);
                     }
-                    
+                }, 150);
+            });
+
+            // Form submission validation - only for our own forms, not Elementor Pro forms
+            const form = field.closest('form');
+            if (form && !form.classList.contains('elementor-form')) {
+                form.addEventListener('submit', function(e) {
                     if (!self.validateField(field, phoneNumber)) {
                         e.preventDefault();
                         return false;
@@ -298,10 +265,31 @@
          * Validate phone field
          */
         validateField(field, phoneNumber) {
+            
             const value = field.value.trim();
             const isPopup = this.isInPopup(field);
+            const isElementorForm = field.closest('.elementor-form') !== null;
             
-            // For popups, use a simpler validation without spaces
+            // For Elementor Pro forms, use permissive but controlled validation
+            if (isElementorForm) {
+                // Accept only numbers, parentheses, hyphens, spaces, plus sign, and dots
+                const phonePattern = /^[\+]?[0-9\(\)\-\s\.]+$/;
+                
+                if (value !== '' && !phonePattern.test(value)) {
+                    const container = field.closest('.iti') || field.parentElement;
+                    this.showError(field, container, 'O campo aceita apenas números e caracteres de telefone.');
+                    return false;
+                }
+                
+                // If validation passes, show success state
+                if (value !== '') {
+                    const container = field.closest('.iti') || field.parentElement;
+                    this.showSuccess(field, container);
+                }
+                return true;
+            }
+            
+            // For popups, use a simpler validation
             if (isPopup) {
                 // Simplified regex for popups - only check for basic phone characters
                 const popupPattern = /^[\+]?[0-9\(\)\-\s\.]+$/;
@@ -320,8 +308,7 @@
                 return true;
             }
             
-            // For regular fields, use simplified validation compatible with Elementor Pro
-            // Simplified regex to match Elementor Pro's phone validation pattern
+            // For regular fields, use simplified validation
             const phonePattern = /^[\+]?[0-9\s\(\)\-\.]+$/;
             
             const container = field.closest('.iti') || field.parentElement;
@@ -332,29 +319,6 @@
             if (value !== '' && !phonePattern.test(value)) {
                 this.showError(field, container, 'O campo aceita apenas números e caracteres de telefone.');
                 return false;
-            }
-
-            // Only validate complete numbers (more than 10 digits) and only on blur/submit
-            const digitCount = value.replace(/\D/g, '').length;
-            
-            // Only validate if the number is complete (at least 10 digits) and not during typing
-            if (phoneNumber && typeof phoneNumber.isValidNumber === 'function' && digitCount >= 10) {
-                try {
-                    const isValid = phoneNumber.isValidNumber();
-                    if (!isValid && value !== '') {
-                        // Only show error if the number is complete and still invalid
-                        this.showError(field, container, 'Número de telefone inválido.');
-                        return false;
-                    }
-                } catch (error) {
-                    // If validation fails due to incomplete number, don't show error
-                    console.log('Phone validation error:', error);
-                }
-            } else if (value !== '' && digitCount < 10) {
-                // If the number is incomplete, don't show any error
-                // Just clear any existing validation
-                this.clearValidation(field);
-                return true;
             }
 
             // If validation passes, show success state
@@ -481,6 +445,7 @@
                     
                     // Prevent event bubbling to avoid conflicts with Elementor
                     e.stopPropagation();
+                    e.preventDefault();
                 }
             });
         }
@@ -491,40 +456,18 @@
         updateMaskForCountry(field, countryData) {
             const isPopup = this.isInPopup(field);
             
-            // Don't apply mask for popups
+            // Don't apply validation patterns for popups
             if (isPopup) {
                 return;
             }
             
-            if (typeof $.fn.mask !== 'undefined') {
-                $(field).unmask();
-                
-                // Apply country-specific mask
-                if (countryData.iso2 === 'br') {
-                    $(field).mask('(00) 0000-00009', {
-                        onKeyPress: function(val, e, field, options) {
-                            field.mask(val.length > 14 ? '(00) 00000-0000' : '(00) 0000-00009', options);
-                        },
-                        onComplete: function(val) {
-                            // Don't trigger change event to avoid conflicts with Elementor validation
-                            // Only clear any existing validation
-                            if (window.ddiPhoneField) {
-                                window.ddiPhoneField.clearValidation(field);
-                            }
-                        }
-                    });
-                } else {
-                    // For other countries, use a more flexible mask
-                    $(field).mask('000000000000000', {
-                        onComplete: function(val) {
-                            // Don't trigger change event to avoid conflicts with Elementor validation
-                            // Only clear any existing validation
-                            if (window.ddiPhoneField) {
-                                window.ddiPhoneField.clearValidation(field);
-                            }
-                        }
-                    });
-                }
+            // Apply country-specific validation patterns
+            if (countryData.iso2 === 'br') {
+                field.setAttribute('pattern', '^\\+?[0-9]{11,15}$'); // Brazilian pattern
+                field.setAttribute('title', 'Número de telefone brasileiro (DDD + 9 dígitos)');
+            } else {
+                field.setAttribute('pattern', '^\\+?[0-9]{10,15}$'); // International pattern
+                field.setAttribute('title', 'Número de telefone internacional (10-15 dígitos)');
             }
         }
 
@@ -532,21 +475,40 @@
          * Force reinitialize phone fields
          */
         forceReinit() {
-            // Destroy existing phone fields
-            this.phoneFields.forEach((phoneField, field) => {
-                if (phoneField && typeof phoneField.destroy === 'function') {
-                    phoneField.destroy();
+            
+            // Only reinit if there are uninitialized phone fields
+            const phoneFields = document.querySelectorAll('input[type="tel"]');
+            let needsReinit = false;
+            
+            phoneFields.forEach(field => {
+                if (!field.classList.contains('iti__tel-input') && !this.phoneFields.has(field)) {
+                    needsReinit = true;
                 }
             });
-            this.phoneFields.clear();
             
-            // Remove existing masks
-            $('input[type="tel"]').unmask();
+            if (!needsReinit) {
+                return;
+            }
             
-            // Remove existing classes
-            $('input[type="tel"]').removeClass('iti__tel-input ddi-popup-field');
+            // Only destroy fields that are not working properly
+            this.phoneFields.forEach((phoneField, field) => {
+                if (phoneField && typeof phoneField.destroy === 'function') {
+                    // Only destroy if the field is not properly initialized
+                    if (!field.classList.contains('iti__tel-input')) {
+                        phoneField.destroy();
+                        this.phoneFields.delete(field);
+                    }
+                }
+            });
             
-            // Reinitialize
+            // Remove existing masks only for uninitialized fields
+            phoneFields.forEach(field => {
+                if (!field.classList.contains('iti__tel-input')) {
+                    field.classList.remove('ddi-popup-field');
+                }
+            });
+            
+            // Reinitialize only new fields
             setTimeout(() => {
                 this.initPhoneFields();
             }, 100);
@@ -599,11 +561,15 @@
         
         window.ddiPhoneField = new DDIPhoneField();
         
-        // Listen for Elementor popup events
+        // Listen for Elementor popup events - only reinit if necessary
         $(document).on('elementor/popup/show', function() {
             setTimeout(() => {
                 if (window.ddiPhoneField) {
-                    window.ddiPhoneField.forceReinit();
+                    // Only reinit if there are phone fields in the popup
+                    const popup = document.querySelector('.elementor-popup-modal');
+                    if (popup && popup.querySelector('input[type="tel"]')) {
+                        window.ddiPhoneField.forceReinit();
+                    }
                 }
             }, 300);
         });
@@ -615,11 +581,15 @@
             }
         });
 
-        // Listen for Elementor popup open
+        // Listen for Elementor popup open - only reinit if necessary
         $(document).on('elementor/popup/open', function() {
             setTimeout(() => {
                 if (window.ddiPhoneField) {
-                    window.ddiPhoneField.forceReinit();
+                    // Only reinit if there are phone fields in the popup
+                    const popup = document.querySelector('.elementor-popup-modal');
+                    if (popup && popup.querySelector('input[type="tel"]')) {
+                        window.ddiPhoneField.forceReinit();
+                    }
                 }
             }, 500);
         });
