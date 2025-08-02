@@ -238,11 +238,12 @@
             const self = this;
             const isPopup = this.isInPopup(field);
 
-            // Real-time validation for all fields
+            // Only validate on blur, not during typing
             field.addEventListener('blur', function() {
                 self.validateField(field, phoneNumber);
             });
 
+            // Clear validation on input to avoid showing errors during typing
             field.addEventListener('input', function() {
                 self.clearValidation(field);
             });
@@ -299,17 +300,24 @@
 
             this.clearValidation(field);
 
+            // Basic pattern validation
             if (value !== '' && !phonePattern.test(value)) {
                 this.showError(field, container, 'O campo aceita apenas números e caracteres de telefone (#, -, *, etc).');
                 return false;
             }
 
-            // Additional validation for regular fields
-            if (phoneNumber && typeof phoneNumber.isValidNumber === 'function') {
-                const isValid = phoneNumber.isValidNumber();
-                if (!isValid && value !== '') {
-                    this.showError(field, container, 'Número de telefone inválido.');
-                    return false;
+            // Only validate if the number seems complete (has enough digits)
+            const digitCount = value.replace(/\D/g, '').length;
+            if (phoneNumber && typeof phoneNumber.isValidNumber === 'function' && digitCount >= 10) {
+                try {
+                    const isValid = phoneNumber.isValidNumber();
+                    if (!isValid && value !== '') {
+                        this.showError(field, container, 'Número de telefone inválido.');
+                        return false;
+                    }
+                } catch (error) {
+                    // If validation fails due to incomplete number, don't show error
+                    console.log('Phone validation error:', error);
                 }
             }
 
