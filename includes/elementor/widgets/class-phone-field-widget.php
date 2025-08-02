@@ -164,6 +164,8 @@ class DDI_Phone_Field_Widget extends \Elementor\Widget_Base {
                 placeholder="<?php echo esc_attr($settings['field_placeholder']); ?>"
                 <?php echo $required_attr; ?>
                 class="ddi-phone-field-input"
+                pattern="[\+]?[0-9\s\(\)\-\.]+"
+                title="<?php echo esc_attr__('Digite apenas números e caracteres de telefone', 'ddi-phone-field'); ?>"
             />
         </div>
         <?php
@@ -191,6 +193,8 @@ class DDI_Phone_Field_Widget extends \Elementor\Widget_Base {
                 placeholder="{{ settings.field_placeholder }}"
                 <# if (settings.required) { #>required<# } #>
                 class="ddi-phone-field-input"
+                pattern="[\+]?[0-9\s\(\)\-\.]+"
+                title="<?php echo esc_attr__('Digite apenas números e caracteres de telefone', 'ddi-phone-field'); ?>"
             />
         </div>
         <?php
