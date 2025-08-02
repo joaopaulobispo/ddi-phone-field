@@ -3,7 +3,7 @@
  * Plugin Name: DDI Phone Field
  * Plugin URI: https://www.wplugin.com.br
  * Description: Adiciona campos de telefone com DDI e bandeira aos formulários do Elementor, Contact Form 7 e WooCommerce.
- * Version: 1.0.1
+ * Version: 1.1.0
  * Author: Wplugin
  * Author URI: https://www.wplugin.com.br
  * License: GPL v2 or later
@@ -15,7 +15,7 @@
  * Requires PHP: 7.4
  *
  * @package DDI_Phone_Field
- * @version 1.0.1
+ * @version 1.1.0
  */
 
 // Prevent direct access
@@ -24,7 +24,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('DDI_PHONE_FIELD_VERSION', '1.0.1');
+define('DDI_PHONE_FIELD_VERSION', '1.1.0');
 define('DDI_PHONE_FIELD_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('DDI_PHONE_FIELD_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('DDI_PHONE_FIELD_PLUGIN_BASENAME', plugin_basename(__FILE__));
